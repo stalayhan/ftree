@@ -47,15 +47,15 @@ dist: clean
 	@printf "\n\t%s\n\n" "creating dist tarball"
 	mkdir -p $(TARGET)
 	cp -R LICENSE Makefile README.md ${HDR} ${SRC} $(TARGET)
-	tar -cvzf $(TARGET).tar.gz $(TARGET)
-	rm -rfv $(TARGET)
+	tar -czf $(TARGET).tar.gz $(TARGET)
+	rm -f $(TARGET)
 
 check test: all
 	./t/test
 
 clean:
-	printf "\n\t%s\n\n" "cleaning"
-	rm -fv $(TARGET) $(OBJ) $(TOBJ) $(TESTS) ftree.tar.gz $(wildcard *.d)
+	@printf "\n\t%s\n\n" "cleaning"
+	rm -f $(TARGET) $(OBJ) $(TOBJ) $(TESTS) ftree.tar.gz $(wildcard *.d)
 
 -include $(wildcard *.d)
 .PHONY: all clean install uninstall dist check test tests

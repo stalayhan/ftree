@@ -25,7 +25,6 @@ struct branch_instr branch_table[64] = {
 		};
 
 void set_breakpoint(callstack_t *callstack) {
-	int status;
   	long orig = ptrace(PTRACE_PEEKTEXT, global_pid, callstack->calldata[callstack->depth].retaddr);
 	long trap;
 
@@ -40,7 +39,6 @@ void set_breakpoint(callstack_t *callstack) {
 }
 
 void remove_breakpoint(callstack_t *callstack) {
-	int status;
 	if (opts.verbose)
 		printf("[+] Removing breakpoint from 0x%lx\n", callstack->calldata[callstack->depth].retaddr);
 
@@ -107,7 +105,7 @@ void clear_call_list(struct call_list **head) {
 
 struct branch_instr * search_branch_instr(uint8_t instr) {
 	int i;
-	struct branch_instr *p, *ret;
+	struct branch_instr *p;
 
 	for (i = 0, p = branch_table; p->mnemonic != (void *)0; p++, i++) {
 		if (instr == p->opcode)
@@ -174,7 +172,6 @@ char * xfmtstrdup(char *fmt, ...) {
 int pid_read(int pid, void *dst, const void *src, size_t len) {
 
         int sz = len / sizeof(void *);
-        int rem = len % sizeof(void *);
         unsigned char *s = (unsigned char *)src;
         unsigned char *d = (unsigned char *)dst;
         long word;
@@ -369,7 +366,7 @@ char *get_dt_strtab_name(struct handle *h, int xset) {
 
 void parse_dynamic_dt_needed(struct handle *h) {
         char *symstr;
-        int i, n_entries;
+        int i;
 	Elf32_Dyn *dyn32;
 	Elf64_Dyn *dyn64;
 
@@ -932,16 +929,14 @@ int distance(unsigned long a, unsigned long b) {
 void examine_process(struct handle *h) {
 
 	int symmatch = 0, cflow_change = 0;
-	int i, count, status, in_routine = 0;
+	int i, count, status;
 	struct user_regs_struct pt_reg;
 	long esp, eax, ebx, edx, ecx, esi, edi, eip;
 	uint8_t buf[8];
 	unsigned long vaddr;
 	unsigned int offset;
 	char *argstr = (void *)0, subname[255], output[512], *sh_src, *sh_dst;
-	long ret = 0, event;
-	unsigned long retaddr, cip, current_ip;
-	struct call_list *call_list = (void *)0;
+	unsigned long current_ip;
 	struct branch_instr *branch;
 	struct address_space *addrspace = (struct address_space *)HeapAlloc(sizeof(struct address_space) * MAX_ADDR_SPACE);
 
@@ -1358,8 +1353,7 @@ char *get_path(int pid) {
 
 int validate_em_type(char *path) {
 	int fd;
-	uint8_t *mem, *p;
-	unsigned int value;
+	uint8_t *mem;
 	Elf64_Ehdr *ehdr64;
 	Elf32_Ehdr *ehdr32;
 
@@ -1479,6 +1473,7 @@ void MapElf64(struct handle *h) {
 
 void sighandle(int sig) {
 	fprintf(stdout, "Caught signal ctrl-C, detaching...\n");
+	(void) sig;
 	ptrace(PTRACE_DETACH, global_pid, (void *)0, (void *)0);
 	exit(0);
 }

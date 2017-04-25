@@ -5,7 +5,16 @@
 
 CC ?= gcc
 LD ?= $(CC)
-CFLAGS = -O2 -pipe -MMD -I. -fPIC -fstack-protector-strong -Wall -Wextra -std=c11 -pedantic-errors -D_XOPEN_SOURCE=500
+MIN_GCC_VERSION = "4.9"
+# Warn if gcc version is lower than 4.9 (-fstack-protector-strong was introduced in this version)
+GCC_VERSION := "`gcc -dumpversion`"
+IS_GCC_ABOVE_MIN_VERSION := $(shell expr "$(GCC_VERSION)" ">=" "$(MIN_GCC_VERSION)")
+ifeq "$(IS_GCC_ABOVE_MIN_VERSION)" "1"
+    CFLAGS = -O2 -pipe -MMD -I. -fPIC -fstack-protector-strong -Wall -Wextra -std=c11 -pedantic-errors -D_XOPEN_SOURCE=500
+else
+    CFLAGS = -O2 -pipe -MMD -I. -fPIC -fstack-protector -Wall -Wextra -std=c11 -pedantic-errors -D_XOPEN_SOURCE=500
+endif
+
 PREFIX ?= $(DESTDIR)/usr/local
 LDFLAGS = -Wl,-O1,--sort-common,--as-needed,-z,relro -Wl,-z,now
 # LDLIBS = $(shell pkg-config --cflags --libs tap)
